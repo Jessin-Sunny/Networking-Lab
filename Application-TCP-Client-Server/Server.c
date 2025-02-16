@@ -1,3 +1,6 @@
+/*
+Application - Capitalizing every word sent by client
+*/
 #include <stdio.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
