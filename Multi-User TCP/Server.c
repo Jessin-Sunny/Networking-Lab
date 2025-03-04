@@ -1,139 +1,171 @@
 #include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
+#include <stdlib.h>
+#include <pthread.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <string.h>
 #include <unistd.h>
-#include <sys/select.h>
 
-#define MAX_CLIENTS 20
+typedef struct
+{
+    int socket;
+    char username[50];
+} Client;
+
+Client clients[50];     //maximum of 50 clients
+int clients_count = 0;
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;      // intializing clients_mutex to be used for mutex
+
+
+void broadcast_msg(char *msg, int clientsocket)
+{
+    pthread_mutex_lock(&clients_mutex);
+    for(int i=0; i < clients_count ; i++)
+    {
+        //sending to every client except sender itself
+        if(clients[i].socket != clientsocket)
+        {
+            send(clients[i].socket, msg, strlen(msg), 0);
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+}
+
+void *handle_client(void *arg)
+{
+    //arg contain infomation about client socket descriptor, got by accept
+    char username[50], buffer[1024];
+    int clientsocket;
+    clientsocket = *(int *)arg;
+
+    //clears username
+    memset(username, 0, sizeof(username));
+
+    //recieving username from client
+    if(recv(clientsocket, username, sizeof(username), 0) < 0)
+    {
+        printf("Recieving Failed\n");
+        close(clientsocket);
+        free(arg);
+        return NULL;
+    }
+
+    //updating client informations
+    pthread_mutex_lock(&clients_mutex);
+    clients[clients_count].socket = clientsocket;
+    strcpy(clients[clients_count].username, username);
+    clients_count++;
+    pthread_mutex_unlock(&clients_mutex);
+
+    printf("%s joined chat\n",username);
+
+    //brodcasting joined message to all clients connected
+    char joined_msg[100];
+    snprintf(joined_msg, sizeof(joined_msg), "%s joined chat\n", username);
+    broadcast_msg(joined_msg, clientsocket);
+
+    //reading the message sent by a client and broadcasting it
+    while(1)
+    {
+        int valread;
+        memset(buffer, 0, sizeof(buffer));
+        valread = recv(clientsocket, buffer, sizeof(buffer), 0);
+        if(valread <= 0)
+        {
+            //valread = 0 means client disconnects
+            //valread < 0 means error
+            break;
+        }
+        char format_msg[1024];
+        snprintf(format_msg, 2000, "%s : %s\n", username, buffer);
+        printf("%s", format_msg);
+        broadcast_msg(format_msg, clientsocket);
+    }
+
+    //coming out of the while loop indicates, client has disconnected
+    //removing disconnected client from the structure
+    //then updating the structure
+    pthread_mutex_lock(&clients_mutex);
+    for(int i = 0; i < clients_count; i++)
+    {
+        //finding out the removed client
+        if(clients[i].socket == clientsocket)
+        {
+            //shifting the other client to one position left
+            for(int j = i; j < clients_count; j++)
+            {
+                clients[j+1] = clients[j];
+            }
+            clients_count--;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&clients_mutex);
+
+    //broadcsting left message
+    printf("%s left the chat\n", username);
+    snprintf(joined_msg, sizeof(joined_msg), "%s left the chat\n", username);
+    broadcast_msg(joined_msg, clientsocket);
+
+    close(clientsocket);
+    free(arg);
+    return NULL;
+
+}
 
 int main()
 {
-    int server,newSock;
-    char buffer[1024];
-    struct sockaddr_in servAddr, clientAddr;
-    socklen_t addrSize;
-    int clientSockets[MAX_CLIENTS] = {0};
-    fd_set readfds;
+
+    int server;
+    struct sockaddr_in servAddr;
+    struct sockaddr_storage store;
+    socklen_t size;
 
     server = socket(AF_INET, SOCK_STREAM, 0);
     if(server < 0)
     {
-	perror("Socket Failed");
-	return -1;
-    }
-
-    servAddr.sin_family = AF_INET;
-    servAddr.sin_port = htons(2136);
-    servAddr.sin_addr.s_addr = inet_addr("127.0.36");
-
-    if(bind(server,(struct sockaddr *)&servAddr,sizeof(servAddr)) <0)
-    {
-	perror("Bind Failed");
-	return -1;
-    }
-
-    if(listen(server,5) == 0)
-    {
-	printf("Server is listening...\n");
+        printf("Socket Creation Failed\n");
+        return -1;
     }
     else
     {
-	perror("Listening Failed");
-	return -1;
+        printf("Socket Creation Successfull\n");
     }
+
+    servAddr.sin_family = AF_INET;
+    servAddr.sin_port = htons(3621);
+    servAddr.sin_addr.s_addr = inet_addr("127.0.0.36");
+
+    if(bind(server, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0)
+    {
+        printf("Binding Failed\n");
+        return -1;
+    }
+
+    if(listen(server, 5) == 0)
+    {
+        printf("Server is Listening\n");
+    }
+
+    size = sizeof(servAddr);
 
     while(1)
     {
-	FD_ZERO(&readfds);
-	FD_SET(server, &readfds);
-	int max_sd = server;
-
-        for(int i=0;i< MAX_CLIENTS; i++)
-	{
-	    if(clientSockets[i] > 0)
-	    {
-		FD_SET(clientSockets[i], &readfds);
-	    }
-	    if(clientSockets[i] > max_sd)
-	    {
-		max_sd = clientSockets[i];
-            }
-	}
-	int activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
-	if(activity < 0)
-	{
-	    perror("Error in Selecting Clients");
-	    continue;
+        int* newSock = malloc(sizeof(int));
+        *newSock = accept(server, (struct sockaddr*)&servAddr, &size);
+        if(*newSock < 1)
+        {
+            printf("Accepting Failed\n");
+            free(newSock);
+            continue;
         }
-        if(FD_ISSET(server, &readfds))
-	{
-	    addrSize = sizeof(clientAddr);
-	    newSock = accept(server, (struct sockaddr*)&clientAddr, &addrSize);
-	    if(newSock < 0)
-	    {
-		perror("Accept Failed");
-		continue;
-	    }
 
-	    printf("New Client Connected (Socket : %d)\n", newSock);
-
-            for (int i=0;i < MAX_CLIENTS;i++)
-	    {
-		if(clientSockets[i] == 0)
-		{
-		    clientSockets[i] = newSock;
-		    break;
-		}
-            }
-	}
-	for(int i=0;i<MAX_CLIENTS;i++)
-	{
-	    int sd = clientSockets[i];
-
-	    if(FD_ISSET(sd, &readfds))
-	    {
-		memset(buffer, 0, sizeof(buffer));
-		int valread = recv(sd, buffer, sizeof(buffer) - 1, 0);
-
-		if(valread == 0)
-		{
-		    printf("Client on socket %d disconnected.\n", sd);
-		    close(sd);
-		    clientSockets[i] = 0;
-		}
-		else
-		{
-		    buffer[valread] = '\0';
-		    printf("Client %d: %s\n", sd, buffer);
-		}
-		if(strcmp(buffer, "exit") == 0)
-		{
-		    printf("Closing connection with client : %d\n", sd);
-		    close(sd);
-		    clientSockets[i]=0;
-		}
-		else
-		{
-		    memset(buffer, 0, sizeof(buffer));
-		    printf("Enter message for client %d : ",sd);
-		    fgets(buffer, sizeof(buffer), stdin);
-                    buffer[strcspn(buffer, "\n")] = '\0';
-
-		    send(sd, buffer, strlen(buffer), 0);
-
-		    if(strcmp(buffer, "exit") == 0)
-		    {
-			printf("Closing Server \n");
-			close(server);
-			return 0;
-		    }
-		}
-            }
-	}
+        pthread_t client_thread;
+        pthread_create(&client_thread, NULL, handle_client, (void *)newSock);
+        pthread_detach(client_thread);
     }
     close(server);
     return 0;
-}
 
+}
