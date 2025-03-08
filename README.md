@@ -9,3 +9,4 @@
 |4   | UDP Client-Server with checking whether a number is prime or composite, <br> if it is composite displaying its factors from the server side   |
 |5   | Multichat with TCP   |
 |6   | Distance Vector Routing Protocol   |
+|7   | Link State Routing Protocol   |
