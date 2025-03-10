@@ -28,9 +28,11 @@ void main()
     printf("Enter the source node: ");
     scanf("%d", &source);  // User selects the source node
     dist[source] = 0;   //distance from source to source is 0
+    //n-1 times running checking for other n-1 nodes
     for(round = 0; round < n - 1; round++)
     {
         min = INT_MAX;
+        //to find the unvisited node with the smallest distance 
         for(v = 0; v<n; v++)
         {
             //finding link with minimum distance
@@ -41,8 +43,10 @@ void main()
             }
         }
         visited[min_index] = 1;
+        //iterates over all nodes to check if the current node has a direct link to another node
         for(d=0; d<n; d++)
         {
+            //d is not visited and There exists a direct link and he current shortest distance to min_index is not infinity and The new possible distance is less than the current stored distance
             if(!visited[d] && adj[min_index][d] && dist[min_index] != INT_MAX && dist[min_index] + adj[min_index][d] < dist[d])
             {
                 dist[d] = dist[min_index] + adj[min_index][d];
