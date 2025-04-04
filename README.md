@@ -10,4 +10,5 @@
 |5   | Multichat with TCP   |
 |6   | Distance Vector Routing Protocol   |
 |7   | Link State Routing Protocol   |
-|8   | Leaky Bucket Congestion Control   |
+|8   | Sliding Window Protocol - Stop & Wait   |
+|9   | Leaky Bucket Congestion Control   |
