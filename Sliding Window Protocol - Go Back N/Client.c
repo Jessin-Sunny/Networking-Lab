@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #define WINDOW_SIZE 4
-#define TOTAL_PACKETS 10
+#define TOTAL_PACKETS 5
 
 int main()
 {
