@@ -4,7 +4,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#define TOTAL_PACKETS 10
+#define TOTAL_PACKETS 5
 #define TIME 2          //defining timeout in seconds
 
 int main()
