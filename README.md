@@ -11,4 +11,5 @@
 |6   | Distance Vector Routing Protocol   |
 |7   | Link State Routing Protocol   |
 |8   | Sliding Window Protocol - Stop & Wait   |
-|9   | Leaky Bucket Congestion Control   |
+|9   | Sliding Window Protocol - Go Back N   |
+|10   | Leaky Bucket Congestion Control   |
