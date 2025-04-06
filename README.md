@@ -12,4 +12,5 @@
 |7   | Link State Routing Protocol   |
 |8   | Sliding Window Protocol - Stop & Wait   |
 |9   | Sliding Window Protocol - Go Back N   |
-|10   | Leaky Bucket Congestion Control   |
+|10   | File Transfer Protocol with reversing File contents at Server side   |
+|11   | Leaky Bucket Congestion Control   |
