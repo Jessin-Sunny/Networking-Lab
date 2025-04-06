@@ -6,11 +6,12 @@
 |1   | TCP Client-Server   |
 |2   | UDP Client-Server   |
 |3   | TCP Client-Server with capitalizing each word sent by client from the server side   |
-|4   | UDP Client-Server with checking whether a number is prime or composite, <br> if it is composite displaying its factors from the server side   |
-|5   | Multichat with TCP   |
-|6   | Distance Vector Routing Protocol   |
-|7   | Link State Routing Protocol   |
-|8   | Sliding Window Protocol - Stop & Wait   |
-|9   | Sliding Window Protocol - Go Back N   |
-|10   | File Transfer Protocol with reversing File contents at Server side   |
-|11   | Leaky Bucket Congestion Control   |
+|4   | TCP Client-Server with Matrix Multiplication   |
+|5   | UDP Client-Server with checking whether a number is prime or composite, <br> if it is composite displaying its factors from the server side   |
+|6   | Multichat with TCP   |
+|7   | Distance Vector Routing Protocol   |
+|8   | Link State Routing Protocol   |
+|9   | Sliding Window Protocol - Stop & Wait   |
+|10   | Sliding Window Protocol - Go Back N   |
+|11   | File Transfer Protocol with reversing File contents at Server side   |
+|12   | Leaky Bucket Congestion Control   |
