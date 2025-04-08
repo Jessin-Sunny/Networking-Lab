@@ -116,7 +116,7 @@ int main()
         char ch;
         printf("\nDo you want to contine ? (y/n) : ");
         scanf(" %c",&ch);
-        if(ch == 'y' || ch =='Y')
+        if(ch == 'n' || ch =='N')
         {
             printf("Exiting Client...\n");
             break;
