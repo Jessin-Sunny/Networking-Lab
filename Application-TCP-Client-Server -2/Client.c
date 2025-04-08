@@ -101,9 +101,9 @@ int main()
         //send first matrix to server
         send(client,  a, sizeof(int) * size * size, 0);
 
-        //send first matrix row size to server
+        //send second matrix row size to server
         send(client,  &p, sizeof(int), 0);
-        //send first matrix column size to server
+        //send second matrix column size to server
         send(client,  &q, sizeof(int), 0);
         //send second matrix to server
         send(client,  b, sizeof(int)* size * size, 0);
